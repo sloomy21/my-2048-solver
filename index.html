@@ -4,596 +4,847 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 2048 Solver</title>
-    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #f3e8ff 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #1f2937;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #6b7280;
+        }
+        
+        .game-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .score {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #374151;
+        }
+        
+        .moves {
+            color: #6b7280;
+        }
+        
+        .evaluation-panel {
+            background: #eff6ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .evaluation-title {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+        
+        .evaluation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .eval-item {
+            padding: 10px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+        }
+        
+        .eval-disabled {
+            background: #e5e7eb;
+            color: #9ca3af;
+        }
+        
+        .eval-chosen {
+            background: #10b981;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .eval-best {
+            background: #3b82f6;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .eval-normal {
+            background: white;
+            color: #374151;
+        }
+        
+        .board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            background: #d1d5db;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .cell:hover {
+            transform: scale(1.05);
+        }
+        
+        .cell-0 { background: #e5e7eb; }
+        .cell-1 { background: #dbeafe; color: #1e40af; }
+        .cell-2 { background: #bfdbfe; color: #1e40af; }
+        .cell-3 { background: #93c5fd; color: #1e3a8a; }
+        .cell-4 { background: #fed7aa; color: #9a3412; }
+        .cell-5 { background: #fdba74; color: #9a3412; }
+        .cell-6 { background: #fecaca; color: #991b1b; }
+        .cell-7 { background: #fca5a5; color: #991b1b; }
+        .cell-8 { background: #fde047; color: #854d0e; }
+        .cell-9 { background: #facc15; color: #854d0e; }
+        .cell-10 { background: #86efac; color: #14532d; }
+        .cell-11 { background: #c084fc; color: #581c87; }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .button-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1em;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-green { background: #10b981; color: white; }
+        .btn-green:hover:not(:disabled) { background: #059669; }
+        
+        .btn-red { background: #ef4444; color: white; }
+        .btn-red:hover:not(:disabled) { background: #dc2626; }
+        
+        .btn-blue { background: #3b82f6; color: white; }
+        .btn-blue:hover:not(:disabled) { background: #2563eb; }
+        
+        .btn-orange { background: #f97316; color: white; }
+        .btn-orange:hover:not(:disabled) { background: #ea580c; }
+        
+        .btn-gray { background: #6b7280; color: white; }
+        .btn-gray:hover:not(:disabled) { background: #4b5563; }
+        
+        .slider-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .slider-row label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9em;
+        }
+        
+        .slider-row input {
+            width: 150px;
+        }
+        
+        .slider-row span {
+            color: #6b7280;
+            font-size: 0.9em;
+        }
+        
+        .tile-selector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .tile-selector label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9em;
+        }
+        
+        .tile-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .tile-btn {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            font-size: 0.9em;
+            border: 2px solid transparent;
+        }
+        
+        .tile-btn.selected {
+            border-color: #3b82f6;
+            transform: scale(1.1);
+        }
+        
+        .status {
+            text-align: center;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        .status-setup { color: #3b82f6; }
+        .status-thinking { color: #3b82f6; }
+        .status-waiting { color: #10b981; }
+        .status-move { color: #6b7280; }
+        .status-gameover { color: #ef4444; font-size: 1.2em; }
+        
+        .info-box {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .info-box h3 {
+            color: #1f2937;
+            margin-bottom: 15px;
+        }
+        
+        .info-box p {
+            color: #6b7280;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #3b82f6;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <div id="root"></div>
-    
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        const { Play, Pause, RotateCcw, Zap } = lucide;
+    <div class="container">
+        <div class="header">
+            <h1>AI 2048 Solver</h1>
+            <p>Set up any board configuration and watch the AI solve it!</p>
+        </div>
+        
+        <div class="game-container">
+            <div class="score-row">
+                <div class="score">Score: <span id="score">0</span></div>
+                <div class="moves">Moves: <span id="moves">0</span></div>
+            </div>
+            
+            <div id="evaluation" class="evaluation-panel hidden">
+                <div class="evaluation-title">AI Move Evaluation:</div>
+                <div class="evaluation-grid" id="evalGrid"></div>
+                <div style="text-align: center; margin-top: 10px; font-size: 0.85em; color: #374151;">
+                    <span id="chosenMove"></span>
+                </div>
+            </div>
+            
+            <div class="board" id="board"></div>
+            
+            <div class="controls">
+                <div id="setupControls">
+                    <div class="button-row">
+                        <button class="btn-green" onclick="startSolving()">▶ Start AI Solver</button>
+                    </div>
+                    <p style="text-align: center; color: #6b7280; font-size: 0.85em; margin-top: 5px;">
+                        Place at least one tile to start
+                    </p>
+                </div>
+                
+                <div id="solverControls" class="hidden">
+                    <div class="button-row">
+                        <button id="playBtn" class="btn-green" onclick="togglePlay()">▶ Play</button>
+                        <button class="btn-blue" onclick="stepMove()" id="stepBtn">⚡ Step</button>
+                        <button class="btn-orange" onclick="backToSetup()">✏ Edit Board</button>
+                    </div>
+                </div>
+                
+                <div class="button-row">
+                    <button class="btn-gray" onclick="resetGame()">↻ Clear Board</button>
+                </div>
+                
+                <div class="slider-row">
+                    <label>Speed:</label>
+                    <input type="range" id="speedSlider" min="100" max="2000" value="500" oninput="updateSpeed(this.value)">
+                    <span id="speedValue">500ms</span>
+                </div>
+                
+                <div class="tile-selector">
+                    <label id="tileSelectorLabel">Place tile:</label>
+                    <div class="tile-buttons" id="tileButtons"></div>
+                </div>
+                
+                <div class="status" id="status">
+                    <span class="status-setup">🎨 Setup Mode: Click tiles to place/remove values</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <h3>How to Use</h3>
+            <p><strong>Setup Mode:</strong> Select a tile value (1-11) and click cells to place it. Click again to remove.</p>
+            <p><strong>Solver Mode:</strong> Click "Start AI Solver" to let the AI solve your board configuration</p>
+            <p><strong>Combining Rules:</strong> 1+1=2, 2+2=3, 3+3=4... tiles combine until reaching 11</p>
+            <p><strong>Your Control:</strong> After each AI move, choose any tile value (1-11) to place</p>
+            <p><strong>Strategy:</strong> Test different starting positions or challenge scenarios</p>
+        </div>
+    </div>
 
-        const AI2048Player = () => {
-          const [board, setBoard] = useState(() => initializeBoard());
-          const [score, setScore] = useState(0);
-          const [gameOver, setGameOver] = useState(false);
-          const [isPlaying, setIsPlaying] = useState(false);
-          const [speed, setSpeed] = useState(500);
-          const [lastMove, setLastMove] = useState('');
-          const [moveCount, setMoveCount] = useState(0);
-          const [thinking, setThinking] = useState(false);
-          const [waitingForTile, setWaitingForTile] = useState(false);
-          const [pendingBoard, setPendingBoard] = useState(null);
-          const [pendingScore, setPendingScore] = useState(0);
-          const [selectedValue, setSelectedValue] = useState(1);
-          const [setupMode, setSetupMode] = useState(true);
-          const [moveEvaluations, setMoveEvaluations] = useState({});
+    <script>
+        // Game state
+        let board = Array(4).fill().map(() => Array(4).fill(0));
+        let score = 0;
+        let moves = 0;
+        let selectedValue = 1;
+        let setupMode = true;
+        let isPlaying = false;
+        let gameOver = false;
+        let waitingForTile = false;
+        let pendingBoard = null;
+        let pendingScore = 0;
+        let lastMove = '';
+        let moveEvaluations = {};
+        let speed = 500;
+        let playInterval = null;
 
-          function initializeBoard() {
-            const newBoard = Array(4).fill().map(() => Array(4).fill(0));
-            return newBoard;
-          }
+        // Initialize
+        function init() {
+            createTileButtons();
+            renderBoard();
+            updateDisplay();
+        }
 
-          function addRandomTile(board) {
-            const emptyCells = [];
+        function createTileButtons() {
+            const container = document.getElementById('tileButtons');
+            for (let i = 1; i <= 11; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'tile-btn cell-' + i + (i === 1 ? ' selected' : '');
+                btn.textContent = i;
+                btn.onclick = () => selectTile(i);
+                container.appendChild(btn);
+            }
+        }
+
+        function selectTile(value) {
+            selectedValue = value;
+            document.querySelectorAll('.tile-btn').forEach((btn, idx) => {
+                btn.classList.toggle('selected', idx + 1 === value);
+            });
+        }
+
+        function renderBoard() {
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+            const displayBoard = waitingForTile ? pendingBoard : board;
+            
             for (let i = 0; i < 4; i++) {
-              for (let j = 0; j < 4; j++) {
-                if (board[i][j] === 0) {
-                  emptyCells.push([i, j]);
+                for (let j = 0; j < 4; j++) {
+                    const cell = document.createElement('div');
+                    const value = displayBoard[i][j];
+                    cell.className = 'cell cell-' + value;
+                    cell.textContent = value !== 0 ? value : '';
+                    cell.onclick = () => handleCellClick(i, j);
+                    boardEl.appendChild(cell);
                 }
-              }
             }
-            if (emptyCells.length > 0) {
-              const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-              board[randomCell[0]][randomCell[1]] = Math.random() < 0.9 ? 1 : 2;
+        }
+
+        function handleCellClick(row, col) {
+            if (setupMode) {
+                if (board[row][col] === selectedValue) {
+                    board[row][col] = 0;
+                } else {
+                    board[row][col] = selectedValue;
+                }
+                renderBoard();
+            } else if (waitingForTile && pendingBoard[row][col] === 0) {
+                placeTile(row, col);
             }
-          }
+        }
 
-          function slideArray(arr) {
-            const filtered = arr.filter(val => val !== 0);
-            const missing = 4 - filtered.length;
-            const zeros = Array(missing).fill(0);
-            return filtered.concat(zeros);
-          }
-
-          function combineArray(arr) {
-            let score = 0;
-            for (let i = 0; i < 3; i++) {
-              if (arr[i] !== 0 && arr[i] === arr[i + 1] && arr[i] < 11) {
-                arr[i] = arr[i] + 1;
-                arr[i + 1] = 0;
-                score += arr[i];
-              }
+        function placeTile(row, col) {
+            board = pendingBoard.map(r => [...r]);
+            board[row][col] = selectedValue;
+            score += pendingScore;
+            waitingForTile = false;
+            pendingBoard = null;
+            pendingScore = 0;
+            
+            if (isGameOver(board)) {
+                gameOver = true;
+                isPlaying = false;
+                updateDisplay();
             }
-            return { arr, score };
-          }
+            
+            renderBoard();
+            updateDisplay();
+        }
 
-          function moveLeft(board) {
+        function startSolving() {
+            let hasAnyTile = false;
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    if (board[i][j] !== 0) {
+                        hasAnyTile = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (hasAnyTile) {
+                setupMode = false;
+                document.getElementById('setupControls').classList.add('hidden');
+                document.getElementById('solverControls').classList.remove('hidden');
+                updateDisplay();
+            }
+        }
+
+        function backToSetup() {
+            setupMode = true;
+            isPlaying = false;
+            gameOver = false;
+            waitingForTile = false;
+            pendingBoard = null;
+            lastMove = '';
+            moveEvaluations = {};
+            clearInterval(playInterval);
+            document.getElementById('setupControls').classList.remove('hidden');
+            document.getElementById('solverControls').classList.add('hidden');
+            document.getElementById('evaluation').classList.add('hidden');
+            updateDisplay();
+        }
+
+        function resetGame() {
+            board = Array(4).fill().map(() => Array(4).fill(0));
+            score = 0;
+            moves = 0;
+            gameOver = false;
+            isPlaying = false;
+            waitingForTile = false;
+            pendingBoard = null;
+            lastMove = '';
+            moveEvaluations = {};
+            clearInterval(playInterval);
+            
+            if (!setupMode) {
+                backToSetup();
+            }
+            
+            renderBoard();
+            updateDisplay();
+        }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                playInterval = setInterval(stepMove, speed);
+            } else {
+                clearInterval(playInterval);
+            }
+            updateDisplay();
+        }
+
+        function updateSpeed(value) {
+            speed = parseInt(value);
+            document.getElementById('speedValue').textContent = speed + 'ms';
+            if (isPlaying) {
+                clearInterval(playInterval);
+                playInterval = setInterval(stepMove, speed);
+            }
+        }
+
+        async function stepMove() {
+            if (gameOver || waitingForTile) return;
+            
+            updateDisplay('thinking');
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const bestMove = getBestMove();
+            if (bestMove) {
+                const result = bestMove.func(board);
+                if (result.moved) {
+                    pendingBoard = result.board;
+                    pendingScore = result.score;
+                    waitingForTile = true;
+                    lastMove = bestMove.name;
+                    moves++;
+                }
+            } else {
+                gameOver = true;
+                isPlaying = false;
+                clearInterval(playInterval);
+            }
+            
+            renderBoard();
+            updateDisplay();
+        }
+
+        function getBestMove() {
+            const moves = [
+                { func: moveLeft, name: 'LEFT' },
+                { func: moveRight, name: 'RIGHT' },
+                { func: moveUp, name: 'UP' },
+                { func: moveDown, name: 'DOWN' }
+            ];
+            
+            let bestMove = null;
+            let bestScore = -Infinity;
+            moveEvaluations = {};
+            
+            for (let move of moves) {
+                const result = move.func(board);
+                if (result.moved) {
+                    const evalScore = minimax(result.board, 3, false);
+                    moveEvaluations[move.name] = evalScore;
+                    if (evalScore > bestScore) {
+                        bestScore = evalScore;
+                        bestMove = move;
+                    }
+                } else {
+                    moveEvaluations[move.name] = null;
+                }
+            }
+            
+            return bestMove;
+        }
+
+        function minimax(board, depth, maximizing) {
+            if (depth === 0 || isGameOver(board)) {
+                return evaluateBoard(board);
+            }
+            
+            if (maximizing) {
+                let maxEval = -Infinity;
+                const moves = [moveLeft, moveRight, moveUp, moveDown];
+                
+                for (let move of moves) {
+                    const result = move(board);
+                    if (result.moved) {
+                        const evalScore = minimax(result.board, depth - 1, false);
+                        maxEval = Math.max(maxEval, evalScore);
+                    }
+                }
+                return maxEval;
+            } else {
+                let minEval = Infinity;
+                const emptyCells = [];
+                
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        if (board[i][j] === 0) {
+                            emptyCells.push([i, j]);
+                        }
+                    }
+                }
+                
+                for (let [r, c] of emptyCells) {
+                    for (let value of [1, 2]) {
+                        const newBoard = board.map(row => [...row]);
+                        newBoard[r][c] = value;
+                        const evalScore = minimax(newBoard, depth - 1, true);
+                        minEval = Math.min(minEval, evalScore);
+                    }
+                }
+                return minEval;
+            }
+        }
+
+        function evaluateBoard(board) {
+            let evalScore = 0;
+            let emptyCells = 0;
+            let maxTile = 0;
+            
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    if (board[i][j] === 0) {
+                        emptyCells++;
+                    } else {
+                        maxTile = Math.max(maxTile, board[i][j]);
+                    }
+                }
+            }
+            
+            let monotonicity = 0;
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if (board[i][j] >= board[i][j + 1]) monotonicity++;
+                    if (board[j][i] >= board[j + 1][i]) monotonicity++;
+                }
+            }
+            
+            let cornerBonus = 0;
+            const corners = [[0,0], [0,3], [3,0], [3,3]];
+            for (let [r, c] of corners) {
+                if (board[r][c] === maxTile) {
+                    cornerBonus = maxTile;
+                    break;
+                }
+            }
+            
+            evalScore = emptyCells * 100 + monotonicity * 10 + cornerBonus;
+            return evalScore;
+        }
+
+        function isGameOver(board) {
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    if (board[i][j] === 0) return false;
+                }
+            }
+            
+            const moves = [moveLeft, moveRight, moveUp, moveDown];
+            for (let move of moves) {
+                if (move(board).moved) return false;
+            }
+            
+            return true;
+        }
+
+        function moveLeft(board) {
             let newBoard = board.map(row => [...row]);
             let totalScore = 0;
             let moved = false;
-
+            
             for (let i = 0; i < 4; i++) {
-              const original = [...newBoard[i]];
-              const slid = slideArray(newBoard[i]);
-              const { arr: combined, score } = combineArray(slid);
-              newBoard[i] = slideArray(combined);
-              totalScore += score;
-              
-              if (JSON.stringify(original) !== JSON.stringify(newBoard[i])) {
-                moved = true;
-              }
+                const original = [...newBoard[i]];
+                const slid = slideArray(newBoard[i]);
+                const combined = combineArray(slid);
+                newBoard[i] = slideArray(combined.arr);
+                totalScore += combined.score;
+                
+                if (JSON.stringify(original) !== JSON.stringify(newBoard[i])) {
+                    moved = true;
+                }
             }
-
+            
             return { board: newBoard, score: totalScore, moved };
-          }
+        }
 
-          function moveRight(board) {
+        function moveRight(board) {
             let newBoard = board.map(row => [...row].reverse());
             const result = moveLeft(newBoard);
             result.board = result.board.map(row => row.reverse());
             return result;
-          }
+        }
 
-          function moveUp(board) {
+        function moveUp(board) {
             let newBoard = Array(4).fill().map(() => Array(4).fill(0));
             for (let i = 0; i < 4; i++) {
-              for (let j = 0; j < 4; j++) {
-                newBoard[i][j] = board[j][i];
-              }
+                for (let j = 0; j < 4; j++) {
+                    newBoard[i][j] = board[j][i];
+                }
             }
             const result = moveLeft(newBoard);
             result.board = Array(4).fill().map(() => Array(4).fill(0));
             for (let i = 0; i < 4; i++) {
-              for (let j = 0; j < 4; j++) {
-                result.board[i][j] = newBoard[j][i];
-              }
+                for (let j = 0; j < 4; j++) {
+                    result.board[i][j] = newBoard[j][i];
+                }
             }
             return result;
-          }
+        }
 
-          function moveDown(board) {
+        function moveDown(board) {
             let newBoard = Array(4).fill().map(() => Array(4).fill(0));
             for (let i = 0; i < 4; i++) {
-              for (let j = 0; j < 4; j++) {
-                newBoard[i][j] = board[j][i];
-              }
+                for (let j = 0; j < 4; j++) {
+                    newBoard[i][j] = board[j][i];
+                }
             }
             newBoard = newBoard.map(row => [...row].reverse());
             const result = moveLeft(newBoard);
             result.board = result.board.map(row => row.reverse());
             const finalBoard = Array(4).fill().map(() => Array(4).fill(0));
             for (let i = 0; i < 4; i++) {
-              for (let j = 0; j < 4; j++) {
-                finalBoard[i][j] = result.board[j][i];
-              }
+                for (let j = 0; j < 4; j++) {
+                    finalBoard[i][j] = result.board[j][i];
+                }
             }
             result.board = finalBoard;
             return result;
-          }
+        }
 
-          function isGameOver(board) {
-            for (let i = 0; i < 4; i++) {
-              for (let j = 0; j < 4; j++) {
-                if (board[i][j] === 0) return false;
-              }
-            }
+        function slideArray(arr) {
+            const filtered = arr.filter(val => val !== 0);
+            const missing = 4 - filtered.length;
+            const zeros = Array(missing).fill(0);
+            return filtered.concat(zeros);
+        }
 
-            const moves = [moveLeft, moveRight, moveUp, moveDown];
-            for (let move of moves) {
-              if (move(board).moved) return false;
-            }
-
-            return true;
-          }
-
-          function evaluateBoard(board) {
+        function combineArray(arr) {
             let score = 0;
-            let emptyCells = 0;
-            let maxTile = 0;
+            for (let i = 0; i < 3; i++) {
+                if (arr[i] !== 0 && arr[i] === arr[i + 1] && arr[i] < 11) {
+                    arr[i] = arr[i] + 1;
+                    arr[i + 1] = 0;
+                    score += arr[i];
+                }
+            }
+            return { arr, score };
+        }
+
+        function updateDisplay(state = null) {
+            document.getElementById('score').textContent = score;
+            document.getElementById('moves').textContent = moves;
             
-            for (let i = 0; i < 4; i++) {
-              for (let j = 0; j < 4; j++) {
-                if (board[i][j] === 0) {
-                  emptyCells++;
+            const playBtn = document.getElementById('playBtn');
+            const stepBtn = document.getElementById('stepBtn');
+            const statusEl = document.getElementById('status');
+            const evalPanel = document.getElementById('evaluation');
+            
+            if (setupMode) {
+                statusEl.innerHTML = '<span class="status-setup">🎨 Setup Mode: Click tiles to place/remove values</span>';
+                evalPanel.classList.add('hidden');
+            } else {
+                if (state === 'thinking') {
+                    statusEl.innerHTML = '<span class="status-thinking"><span class="spinner"></span> AI thinking...</span>';
+                } else if (waitingForTile) {
+                    statusEl.innerHTML = '<span class="status-waiting">Select a tile value above, then click an empty cell!</span>';
+                } else if (gameOver) {
+                    statusEl.innerHTML = '<span class="status-gameover">Game Over! Final Score: ' + score + '</span>';
+                } else if (lastMove) {
+                    statusEl.innerHTML = '<span class="status-move">Last move: <strong>' + lastMove + '</strong></span>';
+                }
+                
+                if (Object.keys(moveEvaluations).length > 0) {
+                    evalPanel.classList.remove('hidden');
+                    renderEvaluations();
+                }
+            }
+            
+            if (playBtn) {
+                playBtn.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+                playBtn.className = isPlaying ? 'btn-red' : 'btn-green';
+                playBtn.disabled = gameOver;
+            }
+            
+            if (stepBtn) {
+                stepBtn.disabled = gameOver || isPlaying || waitingForTile;
+            }
+        }
+
+        function renderEvaluations() {
+            const grid = document.getElementById('evalGrid');
+            const chosenEl = document.getElementById('chosenMove');
+            grid.innerHTML = '';
+            
+            const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+            const scores = Object.values(moveEvaluations).filter(s => s !== null);
+            const maxScore = Math.max(...scores);
+            
+            directions.forEach(dir => {
+                const evalScore = moveEvaluations[dir];
+                const div = document.createElement('div');
+                div.className = 'eval-item ';
+                
+                if (evalScore === null) {
+                    div.className += 'eval-disabled';
+                } else if (dir === lastMove) {
+                    div.className += 'eval-chosen';
+                } else if (evalScore === maxScore) {
+                    div.className += 'eval-best';
                 } else {
-                  maxTile = Math.max(maxTile, board[i][j]);
+                    div.className += 'eval-normal';
                 }
-              }
-            }
-
-            let monotonicity = 0;
-            for (let i = 0; i < 4; i++) {
-              for (let j = 0; j < 3; j++) {
-                if (board[i][j] >= board[i][j + 1]) monotonicity++;
-                if (board[j][i] >= board[j + 1][i]) monotonicity++;
-              }
-            }
-
-            let cornerBonus = 0;
-            const corners = [[0,0], [0,3], [3,0], [3,3]];
-            for (let [r, c] of corners) {
-              if (board[r][c] === maxTile) {
-                cornerBonus = maxTile;
-                break;
-              }
-            }
-
-            score = emptyCells * 100 + monotonicity * 10 + cornerBonus;
-            return score;
-          }
-
-          function minimax(board, depth, maximizing) {
-            if (depth === 0 || isGameOver(board)) {
-              return evaluateBoard(board);
-            }
-
-            if (maximizing) {
-              let maxEval = -Infinity;
-              const moves = [
-                { func: moveLeft, name: 'LEFT' },
-                { func: moveRight, name: 'RIGHT' },
-                { func: moveUp, name: 'UP' },
-                { func: moveDown, name: 'DOWN' }
-              ];
-
-              for (let move of moves) {
-                const result = move.func(board);
-                if (result.moved) {
-                  const eval = minimax(result.board, depth - 1, false);
-                  maxEval = Math.max(maxEval, eval);
-                }
-              }
-              return maxEval;
-            } else {
-              let minEval = Infinity;
-              const emptyCells = [];
-              
-              for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
-                  if (board[i][j] === 0) {
-                    emptyCells.push([i, j]);
-                  }
-                }
-              }
-
-              for (let [r, c] of emptyCells) {
-                for (let value of [1, 2]) {
-                  const newBoard = board.map(row => [...row]);
-                  newBoard[r][c] = value;
-                  const eval = minimax(newBoard, depth - 1, true);
-                  minEval = Math.min(minEval, eval);
-                }
-              }
-              return minEval;
-            }
-          }
-
-          function getBestMove(board) {
-            let bestMove = null;
-            let bestScore = -Infinity;
-            const evaluations = {};
+                
+                div.innerHTML = `
+                    <span>${dir}</span>
+                    <span>${evalScore === null ? '✗' : (dir === lastMove ? '✓ ' : '') + Math.round(evalScore)}</span>
+                `;
+                grid.appendChild(div);
+            });
             
-            const moves = [
-              { func: moveLeft, name: 'LEFT' },
-              { func: moveRight, name: 'RIGHT' },
-              { func: moveUp, name: 'UP' },
-              { func: moveDown, name: 'DOWN' }
-            ];
-
-            for (let move of moves) {
-              const result = move.func(board);
-              if (result.moved) {
-                const score = minimax(result.board, 3, false);
-                evaluations[move.name] = score;
-                if (score > bestScore) {
-                  bestScore = score;
-                  bestMove = move;
-                }
-              } else {
-                evaluations[move.name] = null;
-              }
+            if (lastMove) {
+                chosenEl.innerHTML = '<strong style="color: #10b981;">Chosen: ' + lastMove + '</strong>';
             }
+        }
 
-            setMoveEvaluations(evaluations);
-            return bestMove;
-          }
-
-          const makeAIMove = async () => {
-            if (gameOver) return;
-            
-            setThinking(true);
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            const bestMove = getBestMove(board);
-            if (bestMove) {
-              const result = bestMove.func(board);
-              if (result.moved) {
-                setPendingBoard(result.board);
-                setPendingScore(result.score);
-                setWaitingForTile(true);
-                setLastMove(bestMove.name);
-                setMoveCount(prev => prev + 1);
-              }
-            } else {
-              setGameOver(true);
-              setIsPlaying(false);
-            }
-            setThinking(false);
-          };
-
-          const placeTile = (row, col) => {
-            if (!waitingForTile || !pendingBoard || pendingBoard[row][col] !== 0) return;
-            
-            const newBoard = pendingBoard.map(r => [...r]);
-            newBoard[row][col] = selectedValue;
-            
-            setBoard(newBoard);
-            setScore(prev => prev + pendingScore);
-            setWaitingForTile(false);
-            setPendingBoard(null);
-            setPendingScore(0);
-            
-            if (isGameOver(newBoard)) {
-              setGameOver(true);
-              setIsPlaying(false);
-            }
-          };
-
-          const setupTile = (row, col) => {
-            if (!setupMode) return;
-            
-            const newBoard = board.map(r => [...r]);
-            if (newBoard[row][col] === selectedValue) {
-              newBoard[row][col] = 0;
-            } else {
-              newBoard[row][col] = selectedValue;
-            }
-            setBoard(newBoard);
-          };
-
-          const startSolving = () => {
-            let hasAnyTile = false;
-            for (let i = 0; i < 4; i++) {
-              for (let j = 0; j < 4; j++) {
-                if (board[i][j] !== 0) {
-                  hasAnyTile = true;
-                  break;
-                }
-              }
-            }
-            
-            if (hasAnyTile) {
-              setSetupMode(false);
-            }
-          };
-
-          const backToSetup = () => {
-            setSetupMode(true);
-            setIsPlaying(false);
-            setGameOver(false);
-            setWaitingForTile(false);
-            setPendingBoard(null);
-            setLastMove('');
-            setMoveEvaluations({});
-          };
-
-          useEffect(() => {
-            let interval;
-            if (isPlaying && !gameOver && !waitingForTile) {
-              interval = setInterval(makeAIMove, speed);
-            }
-            return () => clearInterval(interval);
-          }, [isPlaying, gameOver, speed, board, waitingForTile]);
-
-          const resetGame = () => {
-            setBoard(initializeBoard());
-            setScore(0);
-            setGameOver(false);
-            setIsPlaying(false);
-            setLastMove('');
-            setMoveCount(0);
-            setWaitingForTile(false);
-            setPendingBoard(null);
-            setPendingScore(0);
-            setSetupMode(true);
-            setMoveEvaluations({});
-          };
-
-          const togglePlay = () => {
-            setIsPlaying(!isPlaying);
-          };
-
-          const getTileColor = (value) => {
-            const colors = {
-              0: 'bg-gray-200',
-              1: 'bg-blue-50 text-blue-800',
-              2: 'bg-blue-100 text-blue-800',
-              3: 'bg-blue-200 text-blue-900',
-              4: 'bg-orange-200 text-orange-900',
-              5: 'bg-orange-300 text-orange-900',
-              6: 'bg-red-200 text-red-900',
-              7: 'bg-red-300 text-red-900',
-              8: 'bg-yellow-300 text-yellow-900',
-              9: 'bg-yellow-400 text-yellow-900',
-              10: 'bg-green-400 text-green-900',
-              11: 'bg-purple-400 text-purple-900'
-            };
-            return colors[value] || 'bg-purple-500 text-white';
-          };
-
-          return (
-            <div className="max-w-2xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen">
-              <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold text-gray-800 mb-2">AI 2048 Solver</h1>
-                <p className="text-gray-600">Set up any board configuration and watch the AI solve it!</p>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="text-xl font-semibold text-gray-700">
-                    Score: {score}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    Moves: {moveCount}
-                  </div>
-                </div>
-
-                {!setupMode && Object.keys(moveEvaluations).length > 0 && (
-                  <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                    <div className="text-sm font-semibold text-gray-700 mb-2">AI Move Evaluation:</div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['UP', 'DOWN', 'LEFT', 'RIGHT'].map((direction) => {
-                        const score = moveEvaluations[direction];
-                        const isDisabled = score === null;
-                        const isBest = !isDisabled && score === Math.max(...Object.values(moveEvaluations).filter(s => s !== null));
-                        const wasChosen = lastMove === direction;
-                        
-                        return (
-                          <div
-                            key={direction}
-                            className={`p-2 rounded text-sm ${
-                              isDisabled ? 'bg-gray-200 text-gray-400' :
-                              wasChosen ? 'bg-green-500 text-white font-bold' :
-                              isBest ? 'bg-blue-500 text-white font-semibold' :
-                              'bg-white text-gray-700'
-                            }`}
-                          >
-                            <div className="flex justify-between items-center">
-                              <span>{direction}</span>
-                              <span className="text-xs">
-                                {isDisabled ? '✗' : (wasChosen ? '✓ ' : '') + Math.round(score)}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="text-xs text-gray-600 mt-2 text-center">
-                      {lastMove && <span className="font-semibold text-green-600">Chosen: {lastMove}</span>}
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-4 gap-2 mb-6 bg-gray-300 p-3 rounded-lg">
-                  {(waitingForTile ? pendingBoard : board).map((row, i) =>
-                    row.map((cell, j) => (
-                      <div
-                        key={`${i}-${j}`}
-                        className={`w-16 h-16 flex items-center justify-center text-lg font-bold rounded cursor-pointer transition-all ${getTileColor(cell)} ${
-                          setupMode ? 'hover:scale-105 hover:ring-2 hover:ring-blue-400' : 
-                          (waitingForTile && cell === 0 ? 'hover:bg-green-200 hover:scale-105 ring-2 ring-green-400' : '')
-                        }`}
-                        onClick={() => setupMode ? setupTile(i, j) : (waitingForTile && placeTile(i, j))}
-                      >
-                        {cell !== 0 && cell}
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-4">
-                  {setupMode ? (
-                    <>
-                      <div className="text-center">
-                        <button
-                          onClick={startSolving}
-                          className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-all mx-auto text-lg"
-                        >
-                          <Play size={24} />
-                          Start AI Solver
-                        </button>
-                        <p className="text-xs text-gray-500 mt-2">Place at least one tile to start</p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex justify-center gap-2">
-                        <button
-                          onClick={togglePlay}
-                          disabled={gameOver}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                            isPlaying
-                              ? 'bg-red-500 hover:bg-red-600 text-white'
-                              : 'bg-green-500 hover:bg-green-600 text-white'
-                          } ${gameOver ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                          {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-                          {isPlaying ? 'Pause' : 'Play'}
-                        </button>
-
-                        <button
-                          onClick={makeAIMove}
-                          disabled={gameOver || isPlaying || waitingForTile}
-                          className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <Zap size={20} />
-                          Step
-                        </button>
-
-                        <button
-                          onClick={backToSetup}
-                          className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all"
-                        >
-                          Edit Board
-                        </button>
-                      </div>
-                    </>
-                  )}
-
-                  <button
-                    onClick={resetGame}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-all"
-                  >
-                    <RotateCcw size={20} />
-                    Clear Board
-                  </button>
-
-                  <div className="flex items-center justify-center gap-4">
-                    <label className="text-sm font-medium text-gray-700">Speed:</label>
-                    <input
-                      type="range"
-                      min="100"
-                      max="2000"
-                      value={speed}
-                      onChange={(e) => setSpeed(Number(e.target.value))}
-                      className="w-32"
-                      disabled={setupMode}
-                    />
-                    <span className="text-sm text-gray-500">{speed}ms</span>
-                  </div>
-
-                  <div className="flex items-center justify-center gap-2 flex-wrap">
-                    <label className="text-sm font-medium text-gray-700">
-                      {setupMode ? 'Place tile:' : (waitingForTile ? 'Place tile:' : 'Tile values:')}
-                    </label>
-                    <div className="flex gap-1 flex-wrap justify-center">
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((val) => (
-                        <button
-                          key={val}
-                          onClick={() => setSelectedValue(val)}
-                          className={`w-8 h-8 rounded font-medium text-sm transition-all ${
-                            selectedValue === val
-                              ? 'ring-2 ring-blue-500 scale-110 ' + getTileColor(val)
-                              : 'opacity-60 hover:opacity-100 ' + getTileColor(val)
-                          }`}
-                        >
-                          {val}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="text-center min-h-[3rem] flex items-center justify-center">
-                    {setupMode && (
-                      <div className="text-blue-600 font-medium">
-                        <span className="text-sm">🎨 Setup Mode: Click tiles to place/remove values</span>
-                      </div>
-                    )}
-                    {thinking && !setupMode && (
-                      <div className="flex items-center gap-2 text-blue-600">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                        <span className="text-sm">AI thinking...</span>
-                      </div>
-                    )}
-                    {waitingForTile && !setupMode && (
-                      <div className="text-green-600 font-medium">
-                        <span className="text-sm">Select a tile value above, then click an empty cell!</span>
-                      </div>
-                    )}
-                    {lastMove && !thinking && !waitingForTile && !setupMode && (
-                      <div className="text-sm text-gray-600">
-                        Last move: <span className="font-medium text-blue-600">{lastMove}</span>
-                      </div>
-                    )}
-                    {gameOver && !setupMode && (
-                      <div className="text-lg font-bold text-red-600">
-                        Game Over! Final Score: {score}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h3 className="text-lg font-semibold mb-3 text-gray-800">How to Use</h3>
-                <div className="text-sm text-gray-600 space-y-2">
-                  <p>• <strong>Setup Mode:</strong> Select a tile value (1-11) and click cells to place it. Click again to remove.</p>
-                  <p>• <strong>Solver Mode:</strong> Click "Start AI Solver" to let the AI solve your board configuration</p>
-                  <p>• <strong>Combining Rules:</strong> 1+1=2, 2+2=3, 3+3=4... tiles combine until reaching 11</p>
-                  <p>• <strong>Your Control:</strong> After each AI move, choose any tile value (1-11) to place</p>
-                  <p>• <strong>Strategy:</strong> Test different starting positions or challenge scenarios</p>
-                </div>
-              </div>
-            </div>
-          );
-        };
-
-        ReactDOM.render(<AI2048Player />, document.getElementById('root'));
+        // Start the game
+        init();
     </script>
 </body>
 </html>
