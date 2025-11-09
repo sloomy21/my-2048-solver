@@ -1,850 +1,864 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SALMAN</title>
+    <title>AI 2048 Solver</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #e0f2fe 0%, #f3e8ff 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .header h1 {
-            color: #1f2937;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        
-        .header p {
-            color: #6b7280;
-        }
-        
-        .game-container {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-        
-        .score-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        
-        .score {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #374151;
-        }
-        
-        .moves {
-            color: #6b7280;
-        }
-        
-        .evaluation-panel {
-            background: #eff6ff;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .evaluation-title {
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 10px;
-            font-size: 0.9em;
-        }
-        
-        .evaluation-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-        
-        .eval-item {
-            padding: 10px;
-            border-radius: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.9em;
-        }
-        
-        .eval-disabled {
-            background: #e5e7eb;
-            color: #9ca3af;
-        }
-        
-        .eval-chosen {
-            background: #10b981;
-            color: white;
-            font-weight: bold;
-        }
-        
-        .eval-best {
-            background: #3b82f6;
-            color: white;
-            font-weight: 600;
-        }
-        
-        .eval-normal {
-            background: white;
-            color: #374151;
-        }
-        
-        .board {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            background: #d1d5db;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .cell {
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5em;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .cell:hover {
-            transform: scale(1.05);
-        }
-        
-        .cell-0 { background: #e5e7eb; }
-        .cell-1 { background: #dbeafe; color: #1e40af; }
-        .cell-2 { background: #bfdbfe; color: #1e40af; }
-        .cell-3 { background: #93c5fd; color: #1e3a8a; }
-        .cell-4 { background: #fed7aa; color: #9a3412; }
-        .cell-5 { background: #fdba74; color: #9a3412; }
-        .cell-6 { background: #fecaca; color: #991b1b; }
-        .cell-7 { background: #fca5a5; color: #991b1b; }
-        .cell-8 { background: #fde047; color: #854d0e; }
-        .cell-9 { background: #facc15; color: #854d0e; }
-        .cell-10 { background: #86efac; color: #14532d; }
-        .cell-11 { background: #c084fc; color: #581c87; }
-        
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .button-row {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-        
-        button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 1em;
-        }
-        
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .btn-green { background: #10b981; color: white; }
-        .btn-green:hover:not(:disabled) { background: #059669; }
-        
-        .btn-red { background: #ef4444; color: white; }
-        .btn-red:hover:not(:disabled) { background: #dc2626; }
-        
-        .btn-blue { background: #3b82f6; color: white; }
-        .btn-blue:hover:not(:disabled) { background: #2563eb; }
-        
-        .btn-orange { background: #f97316; color: white; }
-        .btn-orange:hover:not(:disabled) { background: #ea580c; }
-        
-        .btn-gray { background: #6b7280; color: white; }
-        .btn-gray:hover:not(:disabled) { background: #4b5563; }
-        
-        .slider-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-        }
-        
-        .slider-row label {
-            font-weight: 600;
-            color: #374151;
-            font-size: 0.9em;
-        }
-        
-        .slider-row input {
-            width: 150px;
-        }
-        
-        .slider-row span {
-            color: #6b7280;
-            font-size: 0.9em;
-        }
-        
-        .tile-selector {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .tile-selector label {
-            font-weight: 600;
-            color: #374151;
-            font-size: 0.9em;
-        }
-        
-        .tile-buttons {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-        }
-        
-        .tile-btn {
-            width: 40px;
-            height: 40px;
-            padding: 0;
-            font-size: 0.9em;
-            border: 2px solid transparent;
-        }
-        
-        .tile-btn.selected {
-            border-color: #3b82f6;
-            transform: scale(1.1);
-        }
-        
-        .status {
-            text-align: center;
-            min-height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-        }
-        
-        .status-setup { color: #3b82f6; }
-        .status-thinking { color: #3b82f6; }
-        .status-waiting { color: #10b981; }
-        .status-move { color: #6b7280; }
-        .status-gameover { color: #ef4444; font-size: 1.2em; }
-        
-        .info-box {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .info-box h3 {
-            color: #1f2937;
-            margin-bottom: 15px;
-        }
-        
-        .info-box p {
-            color: #6b7280;
-            margin-bottom: 10px;
-            font-size: 0.9em;
-            line-height: 1.6;
-        }
-        
-        .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #3b82f6;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .hidden {
-            display: none;
-        }
-    </style>
+
+```
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #e0f2fe 0%, #f3e8ff 100%);
+        min-height: 100vh;
+        padding: 20px;
+    }
+    
+    .container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .header h1 {
+        color: #1f2937;
+        font-size: 2.5em;
+        margin-bottom: 10px;
+    }
+    
+    .header p {
+        color: #6b7280;
+    }
+    
+    .game-container {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .score-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+    
+    .score {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #374151;
+    }
+    
+    .moves {
+        color: #6b7280;
+    }
+    
+    .evaluation-panel {
+        background: #eff6ff;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .evaluation-title {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+    }
+    
+    .evaluation-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    
+    .eval-item {
+        padding: 10px;
+        border-radius: 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9em;
+    }
+    
+    .eval-disabled {
+        background: #e5e7eb;
+        color: #9ca3af;
+    }
+    
+    .eval-chosen {
+        background: #10b981;
+        color: white;
+        font-weight: bold;
+    }
+    
+    .eval-best {
+        background: #3b82f6;
+        color: white;
+        font-weight: 600;
+    }
+    
+    .eval-normal {
+        background: white;
+        color: #374151;
+    }
+    
+    .board {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        background: #d1d5db;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .cell {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5em;
+        font-weight: bold;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .cell:hover {
+        transform: scale(1.05);
+    }
+    
+    .cell-0 { background: #e5e7eb; }
+    .cell-1 { background: #dbeafe; color: #1e40af; }
+    .cell-2 { background: #bfdbfe; color: #1e40af; }
+    .cell-3 { background: #93c5fd; color: #1e3a8a; }
+    .cell-4 { background: #fed7aa; color: #9a3412; }
+    .cell-5 { background: #fdba74; color: #9a3412; }
+    .cell-6 { background: #fecaca; color: #991b1b; }
+    .cell-7 { background: #fca5a5; color: #991b1b; }
+    .cell-8 { background: #fde047; color: #854d0e; }
+    .cell-9 { background: #facc15; color: #854d0e; }
+    .cell-10 { background: #86efac; color: #14532d; }
+    .cell-11 { background: #c084fc; color: #581c87; }
+    
+    .controls {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .button-row {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+    
+    button {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 1em;
+    }
+    
+    button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .btn-green { background: #10b981; color: white; }
+    .btn-green:hover:not(:disabled) { background: #059669; }
+    
+    .btn-red { background: #ef4444; color: white; }
+    .btn-red:hover:not(:disabled) { background: #dc2626; }
+    
+    .btn-blue { background: #3b82f6; color: white; }
+    .btn-blue:hover:not(:disabled) { background: #2563eb; }
+    
+    .btn-orange { background: #f97316; color: white; }
+    .btn-orange:hover:not(:disabled) { background: #ea580c; }
+    
+    .btn-gray { background: #6b7280; color: white; }
+    .btn-gray:hover:not(:disabled) { background: #4b5563; }
+    
+    .slider-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+    }
+    
+    .slider-row label {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.9em;
+    }
+    
+    .slider-row input {
+        width: 150px;
+    }
+    
+    .slider-row span {
+        color: #6b7280;
+        font-size: 0.9em;
+    }
+    
+    .tile-selector {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .tile-selector label {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.9em;
+    }
+    
+    .tile-buttons {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+    
+    .tile-btn {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        font-size: 0.9em;
+        border: 2px solid transparent;
+    }
+    
+    .tile-btn.selected {
+        border-color: #3b82f6;
+        transform: scale(1.1);
+    }
+    
+    .status {
+        text-align: center;
+        min-height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+    
+    .status-setup { color: #3b82f6; }
+    .status-thinking { color: #3b82f6; }
+    .status-waiting { color: #10b981; }
+    .status-move { color: #6b7280; }
+    .status-gameover { color: #ef4444; font-size: 1.2em; }
+    
+    .info-box {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .info-box h3 {
+        color: #1f2937;
+        margin-bottom: 15px;
+    }
+    
+    .info-box p {
+        color: #6b7280;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+        line-height: 1.6;
+    }
+    
+    .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #3b82f6;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .hidden {
+        display: none;
+    }
+</style>
+```
+
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>AI Solver</h1>
+            <h1>AI 2048 Solver</h1>
             <p>Set up any board configuration and watch the AI solve it!</p>
         </div>
+
+```
+    <div class="game-container">
+        <div class="score-row">
+            <div class="score">Score: <span id="score">0</span></div>
+            <div class="moves">Moves: <span id="moves">0</span></div>
+        </div>
         
-        <div class="game-container">
-            <div class="score-row">
-                <div class="score">Score: <span id="score">0</span></div>
-                <div class="moves">Moves: <span id="moves">0</span></div>
-            </div>
-            
-            <div id="evaluation" class="evaluation-panel hidden">
-                <div class="evaluation-title">AI Move Evaluation:</div>
-                <div class="evaluation-grid" id="evalGrid"></div>
-                <div style="text-align: center; margin-top: 10px; font-size: 0.85em; color: #374151;">
-                    <span id="chosenMove"></span>
-                </div>
-            </div>
-            
-            <div class="board" id="board"></div>
-            
-            <div class="controls">
-                <div id="setupControls">
-                    <div class="button-row">
-                        <button class="btn-green" onclick="startSolving()">▶ Start AI Solver</button>
-                    </div>
-                    <p style="text-align: center; color: #6b7280; font-size: 0.85em; margin-top: 5px;">
-                        Place at least one tile to start
-                    </p>
-                </div>
-                
-                <div id="solverControls" class="hidden">
-                    <div class="button-row">
-                        <button id="playBtn" class="btn-green" onclick="togglePlay()">▶ Play</button>
-                        <button class="btn-blue" onclick="stepMove()" id="stepBtn">⚡ Step</button>
-                        <button class="btn-orange" onclick="backToSetup()">✏ Edit Board</button>
-                    </div>
-                </div>
-                
-                <div class="button-row">
-                    <button class="btn-gray" onclick="resetGame()">↻ Clear Board</button>
-                </div>
-                
-                <div class="slider-row">
-                    <label>Speed:</label>
-                    <input type="range" id="speedSlider" min="100" max="2000" value="500" oninput="updateSpeed(this.value)">
-                    <span id="speedValue">500ms</span>
-                </div>
-                
-                <div class="tile-selector">
-                    <label id="tileSelectorLabel">Place tile:</label>
-                    <div class="tile-buttons" id="tileButtons"></div>
-                </div>
-                
-                <div class="status" id="status">
-                    <span class="status-setup">🎨 Setup Mode: Click tiles to place/remove values</span>
-                </div>
+        <div id="evaluation" class="evaluation-panel hidden">
+            <div class="evaluation-title">AI Move Evaluation:</div>
+            <div class="evaluation-grid" id="evalGrid"></div>
+            <div style="text-align: center; margin-top: 10px; font-size: 0.85em; color: #374151;">
+                <span id="chosenMove"></span>
             </div>
         </div>
         
-        <div class="info-box">
-            <h3>How to Use</h3>
-            <p><strong>Setup Mode:</strong> Select a tile value (1-11) and click cells to place it. Click again to remove.</p>
-            <p><strong>Solver Mode:</strong> Click "Start AI Solver" to let the AI solve your board configuration</p>
-            <p><strong>Combining Rules:</strong> 1+1=2, 2+2=3, 3+3=4... tiles combine until reaching 11</p>
-            <p><strong>Your Control:</strong> After each AI move, choose any tile value (1-11) to place</p>
-            <p><strong>Strategy:</strong> Test different starting positions or challenge scenarios</p>
+        <div class="board" id="board"></div>
+        
+        <div class="controls">
+            <div id="setupControls">
+                <div class="button-row">
+                    <button class="btn-green" onclick="startSolving()">▶ Start AI Solver</button>
+                </div>
+                <p style="text-align: center; color: #6b7280; font-size: 0.85em; margin-top: 5px;">
+                    Place at least one tile to start
+                </p>
+            </div>
+            
+            <div id="solverControls" class="hidden">
+                <div class="button-row">
+                    <button id="playBtn" class="btn-green" onclick="togglePlay()">▶ Play</button>
+                    <button class="btn-blue" onclick="stepMove()" id="stepBtn">⚡ Step</button>
+                    <button class="btn-orange" onclick="backToSetup()">✏ Edit Board</button>
+                </div>
+            </div>
+            
+            <div class="button-row">
+                <button class="btn-gray" onclick="resetGame()">↻ Clear Board</button>
+            </div>
+            
+            <div class="slider-row">
+                <label>Speed:</label>
+                <input type="range" id="speedSlider" min="100" max="2000" value="500" oninput="updateSpeed(this.value)">
+                <span id="speedValue">500ms</span>
+            </div>
+            
+            <div class="tile-selector">
+                <label id="tileSelectorLabel">Place tile:</label>
+                <div class="tile-buttons" id="tileButtons"></div>
+            </div>
+            
+            <div class="status" id="status">
+                <span class="status-setup">🎨 Setup Mode: Click tiles to place/remove values</span>
+            </div>
         </div>
     </div>
+    
+    <div class="info-box">
+        <h3>How to Use</h3>
+        <p><strong>Setup Mode:</strong> Select a tile value (1-11) and click cells to place it. Click again to remove.</p>
+        <p><strong>Solver Mode:</strong> Click "Start AI Solver" to let the AI solve your board configuration</p>
+        <p><strong>Combining Rules:</strong> 1+1=2, 2+2=3, 3+3=4... tiles combine until reaching 11</p>
+        <p><strong>Your Control:</strong> After each AI move, choose any tile value (1-11) to place</p>
+        <p><strong>Strategy:</strong> Test different starting positions or challenge scenarios</p>
+    </div>
+</div>
 
-    <script>
-        // Game state
-        let board = Array(4).fill().map(() => Array(4).fill(0));
-        let score = 0;
-        let moves = 0;
-        let selectedValue = 1;
-        let setupMode = true;
-        let isPlaying = false;
-        let gameOver = false;
-        let waitingForTile = false;
-        let pendingBoard = null;
-        let pendingScore = 0;
-        let lastMove = '';
-        let moveEvaluations = {};
-        let speed = 500;
-        let playInterval = null;
+<script>
+    // Game state
+    let board = Array(4).fill().map(() => Array(4).fill(0));
+    let score = 0;
+    let moves = 0;
+    let selectedValue = 1;
+    let setupMode = true;
+    let isPlaying = false;
+    let gameOver = false;
+    let waitingForTile = false;
+    let pendingBoard = null;
+    let pendingScore = 0;
+    let lastMove = '';
+    let moveEvaluations = {};
+    let speed = 500;
+    let playInterval = null;
 
-        // Initialize
-        function init() {
-            createTileButtons();
-            renderBoard();
-            updateDisplay();
+    // Initialize
+    function init() {
+        createTileButtons();
+        renderBoard();
+        updateDisplay();
+    }
+
+    function createTileButtons() {
+        const container = document.getElementById('tileButtons');
+        for (let i = 1; i <= 11; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'tile-btn cell-' + i + (i === 1 ? ' selected' : '');
+            btn.textContent = i;
+            btn.onclick = () => selectTile(i);
+            container.appendChild(btn);
         }
+    }
 
-        function createTileButtons() {
-            const container = document.getElementById('tileButtons');
-            for (let i = 1; i <= 11; i++) {
-                const btn = document.createElement('button');
-                btn.className = 'tile-btn cell-' + i + (i === 1 ? ' selected' : '');
-                btn.textContent = i;
-                btn.onclick = () => selectTile(i);
-                container.appendChild(btn);
+    function selectTile(value) {
+        selectedValue = value;
+        document.querySelectorAll('.tile-btn').forEach((btn, idx) => {
+            btn.classList.toggle('selected', idx + 1 === value);
+        });
+    }
+
+    function renderBoard() {
+        const boardEl = document.getElementById('board');
+        boardEl.innerHTML = '';
+        const displayBoard = waitingForTile ? pendingBoard : board;
+        
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+                const cell = document.createElement('div');
+                const value = displayBoard[i][j];
+                cell.className = 'cell cell-' + value;
+                cell.textContent = value !== 0 ? value : '';
+                cell.onclick = () => handleCellClick(i, j);
+                boardEl.appendChild(cell);
             }
         }
+    }
 
-        function selectTile(value) {
-            selectedValue = value;
-            document.querySelectorAll('.tile-btn').forEach((btn, idx) => {
-                btn.classList.toggle('selected', idx + 1 === value);
-            });
-        }
-
-        function renderBoard() {
-            const boardEl = document.getElementById('board');
-            boardEl.innerHTML = '';
-            const displayBoard = waitingForTile ? pendingBoard : board;
-            
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
-                    const cell = document.createElement('div');
-                    const value = displayBoard[i][j];
-                    cell.className = 'cell cell-' + value;
-                    cell.textContent = value !== 0 ? value : '';
-                    cell.onclick = () => handleCellClick(i, j);
-                    boardEl.appendChild(cell);
-                }
-            }
-        }
-
-        function handleCellClick(row, col) {
-            if (setupMode) {
-                if (board[row][col] === selectedValue) {
-                    board[row][col] = 0;
-                } else {
-                    board[row][col] = selectedValue;
-                }
-                renderBoard();
-            } else if (waitingForTile && pendingBoard[row][col] === 0) {
-                placeTile(row, col);
-            }
-        }
-
-        function placeTile(row, col) {
-            board = pendingBoard.map(r => [...r]);
-            board[row][col] = selectedValue;
-            score += pendingScore;
-            waitingForTile = false;
-            pendingBoard = null;
-            pendingScore = 0;
-            
-            if (isGameOver(board)) {
-                gameOver = true;
-                isPlaying = false;
-                updateDisplay();
-            }
-            
-            renderBoard();
-            updateDisplay();
-        }
-
-        function startSolving() {
-            let hasAnyTile = false;
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
-                    if (board[i][j] !== 0) {
-                        hasAnyTile = true;
-                        break;
-                    }
-                }
-            }
-            
-            if (hasAnyTile) {
-                setupMode = false;
-                document.getElementById('setupControls').classList.add('hidden');
-                document.getElementById('solverControls').classList.remove('hidden');
-                updateDisplay();
-            }
-        }
-
-        function backToSetup() {
-            setupMode = true;
-            isPlaying = false;
-            gameOver = false;
-            waitingForTile = false;
-            pendingBoard = null;
-            lastMove = '';
-            moveEvaluations = {};
-            clearInterval(playInterval);
-            document.getElementById('setupControls').classList.remove('hidden');
-            document.getElementById('solverControls').classList.add('hidden');
-            document.getElementById('evaluation').classList.add('hidden');
-            updateDisplay();
-        }
-
-        function resetGame() {
-            board = Array(4).fill().map(() => Array(4).fill(0));
-            score = 0;
-            moves = 0;
-            gameOver = false;
-            isPlaying = false;
-            waitingForTile = false;
-            pendingBoard = null;
-            lastMove = '';
-            moveEvaluations = {};
-            clearInterval(playInterval);
-            
-            if (!setupMode) {
-                backToSetup();
-            }
-            
-            renderBoard();
-            updateDisplay();
-        }
-
-        function togglePlay() {
-            isPlaying = !isPlaying;
-            if (isPlaying) {
-                playInterval = setInterval(stepMove, speed);
+    function handleCellClick(row, col) {
+        if (setupMode) {
+            if (board[row][col] === selectedValue) {
+                board[row][col] = 0;
             } else {
-                clearInterval(playInterval);
+                board[row][col] = selectedValue;
             }
+            renderBoard();
+        } else if (waitingForTile && pendingBoard[row][col] === 0) {
+            placeTile(row, col);
+        }
+    }
+
+    function placeTile(row, col) {
+        board = pendingBoard.map(r => [...r]);
+        board[row][col] = selectedValue;
+        score += pendingScore;
+        waitingForTile = false;
+        pendingBoard = null;
+        pendingScore = 0;
+        
+        if (isGameOver(board)) {
+            gameOver = true;
+            isPlaying = false;
             updateDisplay();
         }
+        
+        renderBoard();
+        updateDisplay();
+    }
 
-        function updateSpeed(value) {
-            speed = parseInt(value);
-            document.getElementById('speedValue').textContent = speed + 'ms';
-            if (isPlaying) {
-                clearInterval(playInterval);
-                playInterval = setInterval(stepMove, speed);
+    function startSolving() {
+        let hasAnyTile = false;
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+                if (board[i][j] !== 0) {
+                    hasAnyTile = true;
+                    break;
+                }
             }
         }
+        
+        if (hasAnyTile) {
+            setupMode = false;
+            document.getElementById('setupControls').classList.add('hidden');
+            document.getElementById('solverControls').classList.remove('hidden');
+            updateDisplay();
+        }
+    }
 
-        async function stepMove() {
-            if (gameOver || waitingForTile) return;
-            
-            updateDisplay('thinking');
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            const bestMove = getBestMove();
-            if (bestMove) {
-                const result = bestMove.func(board);
-                if (result.moved) {
-                    pendingBoard = result.board;
-                    pendingScore = result.score;
-                    waitingForTile = true;
-                    lastMove = bestMove.name;
-                    moves++;
+    function backToSetup() {
+        setupMode = true;
+        isPlaying = false;
+        gameOver = false;
+        waitingForTile = false;
+        pendingBoard = null;
+        lastMove = '';
+        moveEvaluations = {};
+        clearInterval(playInterval);
+        document.getElementById('setupControls').classList.remove('hidden');
+        document.getElementById('solverControls').classList.add('hidden');
+        document.getElementById('evaluation').classList.add('hidden');
+        updateDisplay();
+    }
+
+    function resetGame() {
+        board = Array(4).fill().map(() => Array(4).fill(0));
+        score = 0;
+        moves = 0;
+        gameOver = false;
+        isPlaying = false;
+        waitingForTile = false;
+        pendingBoard = null;
+        lastMove = '';
+        moveEvaluations = {};
+        clearInterval(playInterval);
+        
+        if (!setupMode) {
+            backToSetup();
+        }
+        
+        renderBoard();
+        updateDisplay();
+    }
+
+    function togglePlay() {
+        isPlaying = !isPlaying;
+        if (isPlaying) {
+            playInterval = setInterval(stepMove, speed);
+        } else {
+            clearInterval(playInterval);
+        }
+        updateDisplay();
+    }
+
+    function updateSpeed(value) {
+        speed = parseInt(value);
+        document.getElementById('speedValue').textContent = speed + 'ms';
+        if (isPlaying) {
+            clearInterval(playInterval);
+            playInterval = setInterval(stepMove, speed);
+        }
+    }
+
+    async function stepMove() {
+        if (gameOver || waitingForTile) return;
+        
+        updateDisplay('thinking');
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const bestMove = getBestMove();
+        if (bestMove) {
+            const result = bestMove.func(board);
+            if (result.moved) {
+                pendingBoard = result.board;
+                pendingScore = result.score;
+                waitingForTile = true;
+                lastMove = bestMove.name;
+                moves++;
+            }
+        } else {
+            gameOver = true;
+            isPlaying = false;
+            clearInterval(playInterval);
+        }
+        
+        renderBoard();
+        updateDisplay();
+    }
+
+    function getBestMove() {
+        const moves = [
+            { func: moveLeft, name: 'LEFT' },
+            { func: moveRight, name: 'RIGHT' },
+            { func: moveUp, name: 'UP' },
+            { func: moveDown, name: 'DOWN' }
+        ];
+        
+        let bestMove = null;
+        let bestScore = -Infinity;
+        moveEvaluations = {};
+        
+        for (let move of moves) {
+            const result = move.func(board);
+            if (result.moved) {
+                const evalScore = minimax(result.board, 3, false);
+                moveEvaluations[move.name] = evalScore;
+                if (evalScore > bestScore) {
+                    bestScore = evalScore;
+                    bestMove = move;
                 }
             } else {
-                gameOver = true;
-                isPlaying = false;
-                clearInterval(playInterval);
+                moveEvaluations[move.name] = null;
             }
-            
-            renderBoard();
-            updateDisplay();
         }
+        
+        return bestMove;
+    }
 
-        function getBestMove() {
-            const moves = [
-                { func: moveLeft, name: 'LEFT' },
-                { func: moveRight, name: 'RIGHT' },
-                { func: moveUp, name: 'UP' },
-                { func: moveDown, name: 'DOWN' }
-            ];
-            
-            let bestMove = null;
-            let bestScore = -Infinity;
-            moveEvaluations = {};
+    function minimax(board, depth, maximizing) {
+        if (depth === 0 || isGameOver(board)) {
+            return evaluateBoard(board);
+        }
+        
+        if (maximizing) {
+            let maxEval = -Infinity;
+            const moves = [moveLeft, moveRight, moveUp, moveDown];
             
             for (let move of moves) {
-                const result = move.func(board);
+                const result = move(board);
                 if (result.moved) {
-                    const evalScore = minimax(result.board, 3, false);
-                    moveEvaluations[move.name] = evalScore;
-                    if (evalScore > bestScore) {
-                        bestScore = evalScore;
-                        bestMove = move;
-                    }
-                } else {
-                    moveEvaluations[move.name] = null;
+                    const evalScore = minimax(result.board, depth - 1, false);
+                    maxEval = Math.max(maxEval, evalScore);
                 }
             }
-            
-            return bestMove;
-        }
-
-        function minimax(board, depth, maximizing) {
-            if (depth === 0 || isGameOver(board)) {
-                return evaluateBoard(board);
-            }
-            
-            if (maximizing) {
-                let maxEval = -Infinity;
-                const moves = [moveLeft, moveRight, moveUp, moveDown];
-                
-                for (let move of moves) {
-                    const result = move(board);
-                    if (result.moved) {
-                        const evalScore = minimax(result.board, depth - 1, false);
-                        maxEval = Math.max(maxEval, evalScore);
-                    }
-                }
-                return maxEval;
-            } else {
-                let minEval = Infinity;
-                const emptyCells = [];
-                
-                for (let i = 0; i < 4; i++) {
-                    for (let j = 0; j < 4; j++) {
-                        if (board[i][j] === 0) {
-                            emptyCells.push([i, j]);
-                        }
-                    }
-                }
-                
-                for (let [r, c] of emptyCells) {
-                    for (let value of [1, 2]) {
-                        const newBoard = board.map(row => [...row]);
-                        newBoard[r][c] = value;
-                        const evalScore = minimax(newBoard, depth - 1, true);
-                        minEval = Math.min(minEval, evalScore);
-                    }
-                }
-                return minEval;
-            }
-        }
-
-        function evaluateBoard(board) {
-            let evalScore = 0;
-            let emptyCells = 0;
-            let maxTile = 0;
+            return maxEval;
+        } else {
+            let minEval = Infinity;
+            const emptyCells = [];
             
             for (let i = 0; i < 4; i++) {
                 for (let j = 0; j < 4; j++) {
                     if (board[i][j] === 0) {
-                        emptyCells++;
-                    } else {
-                        maxTile = Math.max(maxTile, board[i][j]);
+                        emptyCells.push([i, j]);
                     }
                 }
             }
             
-            let monotonicity = 0;
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 3; j++) {
-                    if (board[i][j] >= board[i][j + 1]) monotonicity++;
-                    if (board[j][i] >= board[j + 1][i]) monotonicity++;
+            for (let [r, c] of emptyCells) {
+                for (let value of [1, 2]) {
+                    const newBoard = board.map(row => [...row]);
+                    newBoard[r][c] = value;
+                    const evalScore = minimax(newBoard, depth - 1, true);
+                    minEval = Math.min(minEval, evalScore);
                 }
             }
-            
-            let cornerBonus = 0;
-            const corners = [[0,0], [0,3], [3,0], [3,3]];
-            for (let [r, c] of corners) {
-                if (board[r][c] === maxTile) {
-                    cornerBonus = maxTile;
-                    break;
-                }
-            }
-            
-            evalScore = emptyCells * 100 + monotonicity * 10 + cornerBonus;
-            return evalScore;
+            return minEval;
         }
+    }
 
-        function isGameOver(board) {
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
-                    if (board[i][j] === 0) return false;
-                }
-            }
-            
-            const moves = [moveLeft, moveRight, moveUp, moveDown];
-            for (let move of moves) {
-                if (move(board).moved) return false;
-            }
-            
-            return true;
-        }
-
-        function moveLeft(board) {
-            let newBoard = board.map(row => [...row]);
-            let totalScore = 0;
-            let moved = false;
-            
-            for (let i = 0; i < 4; i++) {
-                const original = [...newBoard[i]];
-                const slid = slideArray(newBoard[i]);
-                const combined = combineArray(slid);
-                newBoard[i] = slideArray(combined.arr);
-                totalScore += combined.score;
-                
-                if (JSON.stringify(original) !== JSON.stringify(newBoard[i])) {
-                    moved = true;
-                }
-            }
-            
-            return { board: newBoard, score: totalScore, moved };
-        }
-
-        function moveRight(board) {
-            let newBoard = board.map(row => [...row].reverse());
-            const result = moveLeft(newBoard);
-            result.board = result.board.map(row => row.reverse());
-            return result;
-        }
-
-        function moveUp(board) {
-            let newBoard = Array(4).fill().map(() => Array(4).fill(0));
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
-                    newBoard[i][j] = board[j][i];
-                }
-            }
-            const result = moveLeft(newBoard);
-            result.board = Array(4).fill().map(() => Array(4).fill(0));
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
-                    result.board[i][j] = newBoard[j][i];
-                }
-            }
-            return result;
-        }
-
-        function moveDown(board) {
-            let newBoard = Array(4).fill().map(() => Array(4).fill(0));
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
-                    newBoard[i][j] = board[j][i];
-                }
-            }
-            newBoard = newBoard.map(row => [...row].reverse());
-            const result = moveLeft(newBoard);
-            result.board = result.board.map(row => row.reverse());
-            const finalBoard = Array(4).fill().map(() => Array(4).fill(0));
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
-                    finalBoard[i][j] = result.board[j][i];
-                }
-            }
-            result.board = finalBoard;
-            return result;
-        }
-
-        function slideArray(arr) {
-            const filtered = arr.filter(val => val !== 0);
-            const missing = 4 - filtered.length;
-            const zeros = Array(missing).fill(0);
-            return filtered.concat(zeros);
-        }
-
-        function combineArray(arr) {
-            let score = 0;
-            for (let i = 0; i < 3; i++) {
-                if (arr[i] !== 0 && arr[i] === arr[i + 1] && arr[i] < 11) {
-                    arr[i] = arr[i] + 1;
-                    arr[i + 1] = 0;
-                    score += arr[i];
-                }
-            }
-            return { arr, score };
-        }
-
-        function updateDisplay(state = null) {
-            document.getElementById('score').textContent = score;
-            document.getElementById('moves').textContent = moves;
-            
-            const playBtn = document.getElementById('playBtn');
-            const stepBtn = document.getElementById('stepBtn');
-            const statusEl = document.getElementById('status');
-            const evalPanel = document.getElementById('evaluation');
-            
-            if (setupMode) {
-                statusEl.innerHTML = '<span class="status-setup">🎨 Setup Mode: Click tiles to place/remove values</span>';
-                evalPanel.classList.add('hidden');
-            } else {
-                if (state === 'thinking') {
-                    statusEl.innerHTML = '<span class="status-thinking"><span class="spinner"></span> AI thinking...</span>';
-                } else if (waitingForTile) {
-                    statusEl.innerHTML = '<span class="status-waiting">Select a tile value above, then click an empty cell!</span>';
-                } else if (gameOver) {
-                    statusEl.innerHTML = '<span class="status-gameover">Game Over! Final Score: ' + score + '</span>';
-                } else if (lastMove) {
-                    statusEl.innerHTML = '<span class="status-move">Last move: <strong>' + lastMove + '</strong></span>';
-                }
-                
-                if (Object.keys(moveEvaluations).length > 0) {
-                    evalPanel.classList.remove('hidden');
-                    renderEvaluations();
-                }
-            }
-            
-            if (playBtn) {
-                playBtn.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
-                playBtn.className = isPlaying ? 'btn-red' : 'btn-green';
-                playBtn.disabled = gameOver;
-            }
-            
-            if (stepBtn) {
-                stepBtn.disabled = gameOver || isPlaying || waitingForTile;
-            }
-        }
-
-        function renderEvaluations() {
-            const grid = document.getElementById('evalGrid');
-            const chosenEl = document.getElementById('chosenMove');
-            grid.innerHTML = '';
-            
-            const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
-            const scores = Object.values(moveEvaluations).filter(s => s !== null);
-            const maxScore = Math.max(...scores);
-            
-            directions.forEach(dir => {
-                const evalScore = moveEvaluations[dir];
-                const div = document.createElement('div');
-                div.className = 'eval-item ';
-                
-                if (evalScore === null) {
-                    div.className += 'eval-disabled';
-                } else if (dir === lastMove) {
-                    div.className += 'eval-chosen';
-                } else if (evalScore === maxScore) {
-                    div.className += 'eval-best';
+    function evaluateBoard(board) {
+        let evalScore = 0;
+        let emptyCells = 0;
+        let maxTile = 0;
+        
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+                if (board[i][j] === 0) {
+                    emptyCells++;
                 } else {
-                    div.className += 'eval-normal';
+                    maxTile = Math.max(maxTile, board[i][j]);
                 }
-                
-                div.innerHTML = `
-                    <span>${dir}</span>
-                    <span>${evalScore === null ? '✗' : (dir === lastMove ? '✓ ' : '') + Math.round(evalScore)}</span>
-                `;
-                grid.appendChild(div);
-            });
-            
-            if (lastMove) {
-                chosenEl.innerHTML = '<strong style="color: #10b981;">Chosen: ' + lastMove + '</strong>';
             }
         }
+        
+        let monotonicity = 0;
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 3; j++) {
+                if (board[i][j] >= board[i][j + 1]) monotonicity++;
+                if (board[j][i] >= board[j + 1][i]) monotonicity++;
+            }
+        }
+        
+        let cornerBonus = 0;
+        const corners = [[0,0], [0,3], [3,0], [3,3]];
+        for (let [r, c] of corners) {
+            if (board[r][c] === maxTile) {
+                cornerBonus = maxTile;
+                break;
+            }
+        }
+        
+        evalScore = emptyCells * 100 + monotonicity * 10 + cornerBonus;
+        return evalScore;
+    }
 
-        // Start the game
-        init();
-    </script>
+    function isGameOver(board) {
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+                if (board[i][j] === 0) return false;
+            }
+        }
+        
+        const moves = [moveLeft, moveRight, moveUp, moveDown];
+        for (let move of moves) {
+            if (move(board).moved) return false;
+        }
+        
+        return true;
+    }
+
+    function moveLeft(board) {
+        let newBoard = board.map(row => [...row]);
+        let totalScore = 0;
+        let moved = false;
+        
+        for (let i = 0; i < 4; i++) {
+            const original = [...newBoard[i]];
+            const slid = slideArray(newBoard[i]);
+            const combined = combineArray(slid);
+            newBoard[i] = slideArray(combined.arr);
+            totalScore += combined.score;
+            
+            if (JSON.stringify(original) !== JSON.stringify(newBoard[i])) {
+                moved = true;
+            }
+        }
+        
+        return { board: newBoard, score: totalScore, moved };
+    }
+
+    function moveRight(board) {
+        let newBoard = board.map(row => [...row].reverse());
+        const result = moveLeft(newBoard);
+        result.board = result.board.map(row => row.reverse());
+        return result;
+    }
+
+    function moveUp(board) {
+        // Transpose the board
+        let transposed = Array(4).fill().map(() => Array(4).fill(0));
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+                transposed[i][j] = board[j][i];
+            }
+        }
+        
+        // Move left on transposed board
+        const result = moveLeft(transposed);
+        
+        // Transpose back
+        const finalBoard = Array(4).fill().map(() => Array(4).fill(0));
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+                finalBoard[i][j] = result.board[j][i];
+            }
+        }
+        
+        result.board = finalBoard;
+        return result;
+    }
+
+    function moveDown(board) {
+        let newBoard = Array(4).fill().map(() => Array(4).fill(0));
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+                newBoard[i][j] = board[j][i];
+            }
+        }
+        newBoard = newBoard.map(row => [...row].reverse());
+        const result = moveLeft(newBoard);
+        result.board = result.board.map(row => row.reverse());
+        const finalBoard = Array(4).fill().map(() => Array(4).fill(0));
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+                finalBoard[i][j] = result.board[j][i];
+            }
+        }
+        result.board = finalBoard;
+        return result;
+    }
+
+    function slideArray(arr) {
+        const filtered = arr.filter(val => val !== 0);
+        const missing = 4 - filtered.length;
+        const zeros = Array(missing).fill(0);
+        return filtered.concat(zeros);
+    }
+
+    function combineArray(arr) {
+        let score = 0;
+        for (let i = 0; i < 3; i++) {
+            if (arr[i] !== 0 && arr[i] === arr[i + 1] && arr[i] < 11) {
+                arr[i] = arr[i] + 1;
+                arr[i + 1] = 0;
+                score += arr[i];
+            }
+        }
+        return { arr, score };
+    }
+
+    function updateDisplay(state = null) {
+        document.getElementById('score').textContent = score;
+        document.getElementById('moves').textContent = moves;
+        
+        const playBtn = document.getElementById('playBtn');
+        const stepBtn = document.getElementById('stepBtn');
+        const statusEl = document.getElementById('status');
+        const evalPanel = document.getElementById('evaluation');
+        
+        if (setupMode) {
+            statusEl.innerHTML = '<span class="status-setup">🎨 Setup Mode: Click tiles to place/remove values</span>';
+            evalPanel.classList.add('hidden');
+        } else {
+            if (state === 'thinking') {
+                statusEl.innerHTML = '<span class="status-thinking"><span class="spinner"></span> AI thinking...</span>';
+            } else if (waitingForTile) {
+                statusEl.innerHTML = '<span class="status-waiting">Select a tile value above, then click an empty cell!</span>';
+            } else if (gameOver) {
+                statusEl.innerHTML = '<span class="status-gameover">Game Over! Final Score: ' + score + '</span>';
+            } else if (lastMove) {
+                statusEl.innerHTML = '<span class="status-move">Last move: <strong>' + lastMove + '</strong></span>';
+            }
+            
+            if (Object.keys(moveEvaluations).length > 0) {
+                evalPanel.classList.remove('hidden');
+                renderEvaluations();
+            }
+        }
+        
+        if (playBtn) {
+            playBtn.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+            playBtn.className = isPlaying ? 'btn-red' : 'btn-green';
+            playBtn.disabled = gameOver;
+        }
+        
+        if (stepBtn) {
+            stepBtn.disabled = gameOver || isPlaying || waitingForTile;
+        }
+    }
+
+    function renderEvaluations() {
+        const grid = document.getElementById('evalGrid');
+        const chosenEl = document.getElementById('chosenMove');
+        grid.innerHTML = '';
+        
+        const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+        const scores = Object.values(moveEvaluations).filter(s => s !== null);
+        const maxScore = Math.max(...scores);
+        
+        directions.forEach(dir => {
+            const evalScore = moveEvaluations[dir];
+            const div = document.createElement('div');
+            div.className = 'eval-item ';
+            
+            if (evalScore === null) {
+                div.className += 'eval-disabled';
+            } else if (dir === lastMove) {
+                div.className += 'eval-chosen';
+            } else if (evalScore === maxScore) {
+                div.className += 'eval-best';
+            } else {
+                div.className += 'eval-normal';
+            }
+            
+            div.innerHTML = `
+                <span>${dir}</span>
+                <span>${evalScore === null ? '✗' : (dir === lastMove ? '✓ ' : '') + Math.round(evalScore)}</span>
+            `;
+            grid.appendChild(div);
+        });
+        
+        if (lastMove) {
+            chosenEl.innerHTML = '<strong style="color: #10b981;">Chosen: ' + lastMove + '</strong>';
+        }
+    }
+
+    // Start the game
+    init();
+</script>
+```
+
 </body>
 </html>
